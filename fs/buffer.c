@@ -274,6 +274,9 @@ struct buffer_head * bread(int dev,int block)
 		return bh;
 	ll_rw_block(READ,bh); //@@将缓冲块与请求项结构挂接，并将请求项添加至请求队列，在当前环境下就是直接执行请求内容。
 	wait_on_buffer(bh);  //@@将等待缓冲块解锁的进程挂起，等待引导块加载完毕后，继续执行。
+	//@@区别主动上锁的进程和访问遇锁的进程。两者进入调度的位置不同。
+	//@@这里的wait_on_buffer是主动上锁的进程进入调度的位置。走过了make_request和add_request的流程。
+	//@@继续运行时也是从这里开始。
 	if (bh->b_uptodate)
 		return bh;
 	brelse(bh);

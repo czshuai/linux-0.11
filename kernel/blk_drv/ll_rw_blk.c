@@ -66,7 +66,7 @@ static void add_request(struct blk_dev_struct * dev, struct request * req)
 	struct request * tmp;
 
 	req->next = NULL;
-	cli();
+	cli();//@@涉及到blk_dev这个全局变量？
 	if (req->bh)
 		req->bh->b_dirt = 0; //@@将请求项加入队列之前，就将dirt置为0，对应到getblk的BADNESS判断中。
 	if (!(tmp = dev->current_request)) {
@@ -99,12 +99,17 @@ static void make_request(int major,int rw, struct buffer_head * bh)
 		if (rw == READA)//@@预读，读多个块
 			rw = READ;
 		else
-			rw = WRITE;//@@test
+			rw = WRITE;
 	}
 	if (rw!=READ && rw!=WRITE)
 		panic("Bad block dev command, must be R/W/RA/WA");
 	lock_buffer(bh);  //@@在缓冲块提出和硬盘同步请求的时候上锁。在end_request请求项执行结束，且将b_uptodate置1后解锁。
 	//@@防止竞争 接下来将进行同步操作。为当前缓冲块创建请求项的过程中，b_lock置1.
+	//@@这里的lock_buffe是访问遇锁的进程进入调度的位置。
+	//@@得到对应的缓冲块按正常流程走，但在试图创建对应请求项，并将缓冲块上锁时。
+	//@@遇到缓冲块已上锁，说明缓冲块在同步，因此进入等待队列。
+	//@@返回时会进入下面的判断语句，说明缓冲块的同步操作已经完成，不需要再创建请求项。
+	//@@所以unlock，返回缓冲块。
 	if ((rw == WRITE && !bh->b_dirt) || (rw == READ && bh->b_uptodate)) {
 		unlock_buffer(bh); //@@不需要同步操作
 		return;
