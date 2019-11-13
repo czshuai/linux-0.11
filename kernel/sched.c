@@ -191,7 +191,7 @@ void wake_up(struct task_struct **p)
 {
 	if (p && *p) {
 		(**p).state=0; //@@set runnable 设置为就绪态
-		*p=NULL;
+		*p=NULL; //@@直接将队列释放，不会对再次建立起来的等待队列产生影响
 	}
 }
 
@@ -392,7 +392,7 @@ void sched_init(void)
 	if (sizeof(struct sigaction) != 16)
 		panic("Struct sigaction MUST be 16 bytes");
 	set_tss_desc(gdt+FIRST_TSS_ENTRY,&(init_task.task.tss)); //@@设置TSS描述符
-	set_ldt_desc(gdt+FIRST_LDT_ENTRY,&(init_task.task.ldt));
+	set_ldt_desc(gdt+FIRST_LDT_ENTRY,&(init_task.task.ldt)); //@@在GDT上挂接LDT和TSS
 	p = gdt+2+FIRST_TSS_ENTRY;
 	for(i=1;i<NR_TASKS;i++) {
 		task[i] = NULL;
@@ -403,8 +403,8 @@ void sched_init(void)
 	}
 /* Clear NT, so that we won't have troubles with that later on */
 	__asm__("pushfl ; andl $0xffffbfff,(%esp) ; popfl");
-	ltr(0); //@@装载寄存器 寄存器指向TSS 装载进程0的TSS
-	lldt(0); //@@ 寄存器指向ldt 进程0的LDT cpu开始执行进程0
+	ltr(0); //@@装载寄存器 寄存器指向TSS 装载进程0的TSS 将TSS挂接到TR寄存器，这里会恢复TSS的现场嘛？？
+	lldt(0); //@@ 寄存器指向ldt 进程0的LDT cpu开始执行进程0 将LDT挂接到LDTR寄存器
 	outb_p(0x36,0x43);		/* binary, mode 3, LSB/MSB, ch 0 */
 	outb_p(LATCH & 0xff , 0x40);	/* LSB */
 	outb(LATCH >> 8 , 0x40);	/* MSB */ //@@设置时钟

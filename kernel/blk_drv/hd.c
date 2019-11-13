@@ -256,15 +256,15 @@ static void read_intr(void)
 		return;
 	}
 	port_read(HD_DATA,CURRENT->buffer,256);
-	CURRENT->errors = 0;
+	CURRENT->errors = 0; //@@
 	CURRENT->buffer += 512;
 	CURRENT->sector++;
 	if (--CURRENT->nr_sectors) {
 		do_hd = &read_intr;
 		return;
 	}
-	end_request(1);
-	do_hd_request();
+	end_request(1); //@@由当前正在运行的进程处理硬盘中断信号
+	do_hd_request(); //@@并将请求项队列中的下一个请求项发送给块设备。
 }
 
 static void write_intr(void)
@@ -299,8 +299,9 @@ void do_hd_request(void)
 	unsigned int sec,head,cyl;
 	unsigned int nsect;
 
-	INIT_REQUEST; 	//@@repeat 宏展开，判断是否还有剩余的请求项
-	dev = MINOR(CURRENT->dev);
+	INIT_REQUEST; 	//@@repeat 宏展开，判断是否还有剩余的请求项。
+					//@@如果没有剩余的请求项，则不在对块设备发送信息，接下来也不会收到块设备的中断信号。
+	dev = MINOR(CURRENT->dev); //@@ CURRENT在不同的文件中表示不同的设备，hd.c中定义MAJOR_NR为2，也就是当前硬盘设备正在处理的请求项。
 	block = CURRENT->sector;
 	if (dev >= 5*NR_HD || block+2 > hd[dev].nr_sects) {
 		end_request(0);
@@ -309,7 +310,7 @@ void do_hd_request(void)
 	block += hd[dev].start_sect;
 	dev /= 5; //@@物理硬盘
 	__asm__("divl %4":"=a" (block),"=d" (sec):"0" (block),"1" (0),
-		"r" (hd_info[dev].sect));
+		"r" (hd_info[dev].sect)); //@@通过块号来换算磁头、扇区、柱面等参数
 	__asm__("divl %4":"=a" (cyl),"=d" (head):"0" (block),"1" (0),
 		"r" (hd_info[dev].head));
 	sec++;

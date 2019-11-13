@@ -120,7 +120,7 @@ extern inline void end_request(int uptodate)
 	}
 	wake_up(&CURRENT->waiting); //@@激活列表头的进程，后续的进程也会接连激活，在sleep_on中体现
 	//@@唤醒等待当前请求项同步完成的进程
-	wake_up(&wait_for_request);
+	wake_up(&wait_for_request); //@@一旦执行队列的wake_up，队列中的进程将接连唤醒。
 	//@@唤醒等待空闲请求项的进程
 	CURRENT->dev = -1; //@@当前请求项置空闲 
 	//@@体现的是尽可能快的让缓冲区和硬盘交换数据的思想，即请求项完成工作后，直接置空闲，区别于缓冲块

@@ -190,7 +190,7 @@ struct buffer_head * get_hash_table(int dev, int block)
 		bh->b_count++;
 		wait_on_buffer(bh);
 		if (bh->b_dev == dev && bh->b_blocknr == block)
-			return bh;b_uptodate
+			return bh;
 		bh->b_count--;
 	}
 }
@@ -229,7 +229,7 @@ repeat:
 	if (bh->b_count)
 		goto repeat;
 	while (bh->b_dirt) {
-		sync_dev(bh->b_dev); //@@同步流程
+		sync_dev(bh->b_dev); //@@同步流程 清空该设备上的所有脏数据 P387,388
 		wait_on_buffer(bh);
 		if (bh->b_count)
 			goto repeat;

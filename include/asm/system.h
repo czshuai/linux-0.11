@@ -1,6 +1,6 @@
 #define move_to_user_mode() \
 __asm__ ("movl %%esp,%%eax\n\t" \ //@@这里使用的始终是用户栈
-	"pushl $0x17\n\t" \ //@@压栈的顺序ss esp Eflag cs EIP 
+	"pushl $0x17\n\t" \ //@@压栈的顺序ss esp Eflags cs EIP 
 	//@@中断使用硬件压栈 硬件行为 这里没有interrupt，使用人工压栈
 	"pushl %%eax\n\t" \  // question#内核代码段的段基址段限长
 	"pushfl\n\t" \

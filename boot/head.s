@@ -116,7 +116,7 @@ setup_gdt:
  * using 4 of them to span 16 Mb of physical memory. People with
  * more than 16MB will have to expand this.
  */
-.org 0x1000
+.org 0x1000  //@@页表地址
 pg0:
 
 .org 0x2000
@@ -142,7 +142,7 @@ after_page_tables:
 	pushl $0
 	pushl $0
 	pushl $L6		# return address for main （main函数的返回地址）, if it decides to.
-	pushl $_main		
+	pushl $_main	
 						//@@将main函数地址压栈作为子函数调用的返回地址 内核中的main函数 内核作为最底层函数 不返回到当前位置 当前操作使得ret返回到内核main函数自身
 						//@@eip ： instruction pointer
 						//@@不使用call调用main 使用的是ret
@@ -212,7 +212,7 @@ setup_paging: 				//@@内核分页 两级页表 页目录 页表 分别占一个
 	xorl %eax,%eax
 	xorl %edi,%edi			/* pg_dir is at 0x000 */
 	cld;rep;stosl
-	movl $pg0+7,_pg_dir		/* set present bit/user r/w */  @@_pg_dir就是页目录表 这里装载页目录表
+	movl $pg0+7,_pg_dir		/* set present bit/user r/w */  @@_pg_dir就是页目录表 这里装载页目录表 同时覆盖head的内容
 	movl $pg1+7,_pg_dir+4		/*  --------- " " --------- */
 	movl $pg2+7,_pg_dir+8		/*  --------- " " --------- */
 	movl $pg3+7,_pg_dir+12		/*  --------- " " --------- */

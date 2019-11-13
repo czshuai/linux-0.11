@@ -119,7 +119,7 @@ int copy_process(int nr,long ebp,long edi,long esi,long gs,long none, //@@nr的�
 	p->tss.ds = ds & 0xffff;
 	p->tss.fs = fs & 0xffff;
 	p->tss.gs = gs & 0xffff; //@@构建段寄存器的上下文环境
-	p->tss.ldt = _LDT(nr);
+	p->tss.ldt = _LDT(nr); //@@LDT的段选择子
 	p->tss.trace_bitmap = 0x80000000; //@@------------------
 	if (last_task_used_math == current)
 		__asm__("clts ; fnsave %0"::"m" (p->tss.i387));
